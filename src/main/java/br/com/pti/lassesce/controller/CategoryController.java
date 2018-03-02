@@ -43,16 +43,15 @@ public class CategoryController {
 	 * @param id
 	 * @throws Exception
 	 */
-	@RequestMapping(value="/{id}",method=RequestMethod.DELETE)
+	@RequestMapping(value="/delete",method=RequestMethod.PUT)
 	@ResponseStatus(HttpStatus.OK)
-	public ResponseEntity<Void> deleteCategory(@PathVariable long id) {
-		Category category = categoryService.findOne(id);
-		if(category != null) {
-			categoryService.delete(category);	
-			return ResponseEntity.noContent().build();
-		}else {
-			return ResponseEntity.notFound().build();
-		}
+	public void deleteCategory(@RequestBody Category category) throws Exception {
+			category.setActive(false);
+			try {
+				categoryService.insertUpdate(category);	
+			}catch (Exception e) {
+				throw new Exception(e);
+			}	
 	}
 
 	/**

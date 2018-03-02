@@ -15,7 +15,7 @@ public class LoanOrderService {
 	@Autowired
 	LoanOrderRepository loanOrderRepository;
 
-	public void insert(LoanOrder loanOrder) {
+	public void insert(LoanOrder loanOrder) {		
 		loanOrderRepository.save(loanOrder);
 	}
 
@@ -38,7 +38,7 @@ public class LoanOrderService {
 	 */
 	public List<LoanOrder> getLateLoan(){
 		LocalDate dayDate = LocalDate.now();
-		List<LoanOrder> lateLoanList = loanOrderRepository.findByPulloutLessThanAndRefoundLessThanAndReturnedFalse(dayDate,dayDate);
+		List<LoanOrder> lateLoanList = loanOrderRepository.findByPulloutLessThanAndRefoundLessThanAndReturnedFalseAndDeliveredTrue(dayDate,dayDate);
 		return lateLoanList;
 	}
 	/**
@@ -46,7 +46,7 @@ public class LoanOrderService {
 	 */
 	public List<LoanOrder> getDayRefound() {
 		LocalDate today = LocalDate.now();
-		List<LoanOrder> loanList = loanOrderRepository.findByRefoundEqualsAndDeliveredFalse(today);
+		List<LoanOrder> loanList = loanOrderRepository.findByRefoundEqualsAndDeliveredTrueAndReturnedFalse(today);
 		return loanList;
 	}
 	
@@ -83,7 +83,7 @@ public class LoanOrderService {
 	 */
 	public List<LoanOrder> getLateLoanByUser(long id){
 		LocalDate dayDate = LocalDate.now();
-		List<LoanOrder> lateLoanList = loanOrderRepository.findByUserIdAndPulloutLessThanAndRefoundLessThanAndReturnedFalse(id,dayDate,dayDate);
+		List<LoanOrder> lateLoanList = loanOrderRepository.findByUserIdAndPulloutLessThanAndRefoundLessThanAndReturnedFalseAndDeliveredTrue(id,dayDate,dayDate);
 		return lateLoanList;
 	}
 	/**
@@ -91,7 +91,7 @@ public class LoanOrderService {
 	 */
 	public List<LoanOrder> getDayRefoundByUser(long id) {
 		LocalDate today = LocalDate.now();
-		List<LoanOrder> loanList = loanOrderRepository.findByUserIdAndRefoundEqualsAndDeliveredFalse(id,today);
+		List<LoanOrder> loanList = loanOrderRepository.findByUserIdAndRefoundEqualsAndDeliveredTrueAndReturnedFalse(id,today);
 		return loanList;
 	}
 	

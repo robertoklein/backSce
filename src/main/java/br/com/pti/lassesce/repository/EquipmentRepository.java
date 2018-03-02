@@ -13,9 +13,11 @@ import br.com.pti.lassesce.model.Equipment;
 @Repository
 public interface EquipmentRepository extends PagingAndSortingRepository<Equipment, Long>{
 	
-	List<Equipment> findByNameIgnoreCaseContaining(@Param("string") String string);
+	List<Equipment> findByNameIgnoreCaseContainingAndActiveTrue(@Param("string") String string);
 
 	Page<Equipment> findAll(Pageable pageable);
 	
-	List<Equipment> findAll();	
+	List<Equipment> findByActiveTrue();	
+	
+	Equipment findBySerial(String serial);
 }

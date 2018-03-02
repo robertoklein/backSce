@@ -15,6 +15,20 @@ public class Category {
 	private long id;
 	
 	private String name;
+	 
+	private boolean active;
+	
+	public Category() {
+		this.active = true;
+	}
+	
+	public boolean isActive() {
+		return active;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
 
 	public long getId() {
 		return id;

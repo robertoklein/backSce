@@ -17,7 +17,7 @@ public interface LoanOrderRepository extends JpaRepository<LoanOrder, Long>{
 			+ "(pullout >= :date1 and pullout <= :date2 and refound >= :date2 and returned = false)"
 			+ "or (pullout <= :date1 and refound >= :date1 and refound <= :date2 and returned = false)"
 			+ "or (pullout >= :date1 and refound <= :date2 and returned = false)"
-			+ "or (pullout <= :date1 and refound <= :date1 and returned = false)"
+			+ "or (pullout <= :date1 and refound <= :date1 and returned = false and delivered = true )" // atrasadas
 			+ "or (pullout <= :date1 and refound >= :date2 and returned = false)")
 List<LoanOrder> findByDateBetween(@Param("date1") LocalDate date1, @Param("date2") LocalDate date2); 
 	
@@ -28,14 +28,15 @@ List<LoanOrder> findByDateBetween(@Param("date1") LocalDate date1, @Param("date2
 	 * @param dayDate
 	 * @return
 	 */
-	List<LoanOrder> findByPulloutLessThanAndRefoundLessThanAndReturnedFalse(LocalDate dayDate, LocalDate dayDate2);
+	List<LoanOrder> findByPulloutLessThanAndRefoundLessThanAndReturnedFalseAndDeliveredTrue(LocalDate dayDate, LocalDate dayDate2);
 	
 	/**
-	 * Query responsável por retornar as loans a serem entregues no dia corrente.
+	 * Query responsável por retornar as loans a serem devolvidas no dia corrente.
 	 * @param dayDate
 	 * @return
 	 */
-	List<LoanOrder> findByRefoundEqualsAndDeliveredFalse(LocalDate dayDate);
+	//List<LoanOrder> findByRefoundEqualsAndDeliveredFalse(LocalDate dayDate);
+	List<LoanOrder> findByRefoundEqualsAndDeliveredTrueAndReturnedFalse(LocalDate dayDate);
 	
 	/**
 	 * Query responsável por retornar as loans em aberto
@@ -65,14 +66,14 @@ List<LoanOrder> findByDateBetween(@Param("date1") LocalDate date1, @Param("date2
 	 * @param dayDate
 	 * @return
 	 */
-	List<LoanOrder> findByUserIdAndPulloutLessThanAndRefoundLessThanAndReturnedFalse(long id, LocalDate dayDate, LocalDate dayDate2);
+	List<LoanOrder> findByUserIdAndPulloutLessThanAndRefoundLessThanAndReturnedFalseAndDeliveredTrue(long id, LocalDate dayDate, LocalDate dayDate2);
 	
 	/**
 	 * Query responsável por retornar as loans a serem entregues no dia corrente.
 	 * @param dayDate
 	 * @return
 	 */
-	List<LoanOrder> findByUserIdAndRefoundEqualsAndDeliveredFalse(long id, LocalDate dayDate);
+	List<LoanOrder> findByUserIdAndRefoundEqualsAndDeliveredTrueAndReturnedFalse(long id, LocalDate dayDate);
 	
 	/**
 	 * Query responsável por retornar as loans em aberto

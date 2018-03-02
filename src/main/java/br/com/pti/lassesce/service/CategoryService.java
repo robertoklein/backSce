@@ -26,12 +26,17 @@ public class CategoryService {
 		categoryRepository.save(category);
 	}
 	
-	public void delete(Category category) {
-		categoryRepository.delete(category);
-	}
+	//public void delete(Category category) {
+		//System.out.println("active: " + category.isActive());
+		//category.setActive(false);
+		//System.out.println("nome categoria: " + category.getName());
+		//System.out.println("active: " + category.isActive());
+		//categoryRepository.save(category);
+		//categoryRepository.delete(category);
+	//}
 	
 	public List<Category> find(){
-		return categoryRepository.findAll();
+		return categoryRepository.findByActiveTrue();
 	}
 	
 	

@@ -23,8 +23,24 @@ public class Equipment {
 	@ManyToOne
 	private Category category;
 	
+	private String serial;
+	
 	@Transient
 	private boolean unavailable = false;
+	
+	private boolean active;
+	
+	public Equipment() {
+		this.active = true;
+	}
+
+	public boolean isActive() {
+		return active;
+	}
+
+	public void setActive(boolean active) {
+		this.active = active;
+	}
 
 	public long getId() {
 		return id;
@@ -32,6 +48,14 @@ public class Equipment {
 
 	public void setId(long id) {
 		this.id = id;
+	}
+
+	public String getSerial() {
+		return serial;
+	}
+
+	public void setSerial(String serial) {
+		this.serial = serial;
 	}
 
 	public String getName() {

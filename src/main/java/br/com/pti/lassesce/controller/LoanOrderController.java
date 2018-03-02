@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -154,6 +153,52 @@ public class LoanOrderController {
 			throw new Exception(e);
 		}
 	}
+	
+	@RequestMapping(value="/scheduled/user/{id}", method=RequestMethod.GET)
+	public ResponseEntity<List<LoanOrder>> getScheduledLoanByUser(@PathVariable long id) {
+		List<LoanOrder> list = loanOrderService.getScheculedByUser(id);
+		 if(list.isEmpty()) {
+			 return new ResponseEntity<>(list,null,HttpStatus.NOT_FOUND);
+			}
+			return new ResponseEntity<>(list,null,HttpStatus.OK);
+	}
+	
+	@RequestMapping(value="/dayPullout/user/{id}", method=RequestMethod.GET)
+	public ResponseEntity<List<LoanOrder>> getDayPulloutByUser(@PathVariable long id) {
+		List<LoanOrder> list = loanOrderService.getDayPulloutByUser(id);
+		 if(list.isEmpty()) {
+			 return new ResponseEntity<>(list,null,HttpStatus.NOT_FOUND);
+			}
+			return new ResponseEntity<>(list,null,HttpStatus.OK);
+	}
+	
+	@RequestMapping(value="/lateLoan/user/{id}", method=RequestMethod.GET)
+	public ResponseEntity<List<LoanOrder>> getLateLoanByUser(@PathVariable long id) {
+		List<LoanOrder> list = loanOrderService.getLateLoanByUser(id);
+		 if(list.isEmpty()) {
+			 return new ResponseEntity<>(list,null,HttpStatus.NOT_FOUND);
+			}
+			return new ResponseEntity<>(list,null,HttpStatus.OK);
+	}
+	
+	@RequestMapping(value="/openLoan/user/{id}", method=RequestMethod.GET)
+	public ResponseEntity<List<LoanOrder>> getOpenLoanByUser(@PathVariable long id) {
+		List<LoanOrder> list = loanOrderService.getOpenLoanByUser(id);
+		 if(list.isEmpty()) {
+			 return new ResponseEntity<>(list,null,HttpStatus.NOT_FOUND);
+			}
+			return new ResponseEntity<>(list,null,HttpStatus.OK);
+	}
+	
+	@RequestMapping(value="/dayRefound/user/{id}", method=RequestMethod.GET)
+	public ResponseEntity<List<LoanOrder>> getDayRefoundByUser(@PathVariable long id) {
+		List<LoanOrder> list = loanOrderService.getDayRefoundByUser(id);
+		 if(list.isEmpty()) {
+			 return new ResponseEntity<>(list,null,HttpStatus.NOT_FOUND);
+			}
+			return new ResponseEntity<>(list,null,HttpStatus.OK);
+	}
+	
 	
 }
 	

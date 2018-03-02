@@ -5,8 +5,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.DateTimeFormat.ISO;
 import org.springframework.http.HttpStatus;
@@ -29,35 +27,21 @@ public class EquipmentController {
 	@Autowired
 	EquipmentService equipmentService;
 
-	/**
-	 * método responsável por criar um equipamento
-	 * @param equipment
-	 * @throws Exception
-	 */
-	@RequestMapping(method=RequestMethod.POST)
-	@ResponseStatus(HttpStatus.CREATED)
-	public void create(@RequestBody Equipment equipment) throws Exception {
-		try {
-			equipmentService.insertUpdate(equipment);
-		}catch (Exception e) {
-			throw new Exception(e);
-		}	
-	}
 
 	/**
 	 * método responsavel por apagar um equipamento
 	 * @param id
 	 * @return
+	 * @throws Exception 
 	 */
-	@RequestMapping(value="/{id}",method=RequestMethod.DELETE)
+	@RequestMapping(value="/delete",method=RequestMethod.PUT)
 	@ResponseStatus(HttpStatus.OK)
-	public ResponseEntity<Void> delete(@PathVariable long id) {
-		Equipment equipment = equipmentService.findOne(id);
-		if(equipment != null) {
-			equipmentService.delete(equipment);	
-			return ResponseEntity.noContent().build();
-		}else {
-			return ResponseEntity.notFound().build();
+	public void deleteEquipment(@RequestBody Equipment equipment) throws Exception {
+		equipment.setActive(false);
+		try {
+			equipmentService.insertUpdate(equipment);
+		}catch (Exception e) {
+			throw new Exception(e);
 		}
 	}
 
@@ -94,25 +78,69 @@ public class EquipmentController {
 	 * método responsável por alterar um equipamento já cadastrada
 	 */
 	@RequestMapping(method=RequestMethod.PUT)
-	public void updateCategory(@RequestBody Equipment equipment) {
-		equipmentService.insertUpdate(equipment);
+	public ResponseEntity<Equipment> updateEquipment(@RequestBody Equipment equipment) {
+		boolean equalSerial = equipmentService.searchSerial(equipment);
+		if(equalSerial) {
+			//se equalSerial for true, possuem o mesmo patrimonio(serial), entao nao precisa verificar se existe outro cadastrado
+			equipmentService.insertUpdate(equipment);
+			return new ResponseEntity<>(equipment,null,HttpStatus.CREATED);
+		}else {
+			boolean serialExist = equipmentService.existSerial(equipment);
+			if(serialExist == false) {
+				equipmentService.insertUpdate(equipment);
+				return new ResponseEntity<>(equipment,null,HttpStatus.CREATED);
+			}else {
+				return new ResponseEntity<>(equipment,null,HttpStatus.CONFLICT);
+			}
+		}
+	}
+
+	/**
+	 * método responsável por criar um equipamento
+	 * @param equipment
+	 * @throws Exception
+	 */
+	@RequestMapping(method=RequestMethod.POST)
+	public ResponseEntity<Equipment> create(@RequestBody Equipment equipment) throws Exception {
+		try {
+			//se o retorno for true, o serial já existe no banco e nao existe se for false
+			boolean serialExist = equipmentService.existSerial(equipment);
+			if(serialExist == false) {
+				equipmentService.insertUpdate(equipment);
+				return new ResponseEntity<>(equipment,null,HttpStatus.CREATED);
+			}else {
+				return new ResponseEntity<>(equipment,null,HttpStatus.CONFLICT);
+			}
+		}catch (Exception e) {
+			throw new Exception(e);
+		}	
 	}
 
 	/**
 	 * Método responsável por realizar a busca de equipamentos a partir da string do nome, funcionalidade
-	 * da barre de pesquisa de equipamentos.
+	 * da barra de pesquisa de equipamentos.
 	 * @param name
 	 * @return
 	 */
 	@RequestMapping(value="/find/{name}", method=RequestMethod.GET)
-	public ResponseEntity<List<Equipment>> getByString(@PathVariable String name) {
-
-		//colocar as datas no parametro, apos testar
-		LocalDate data1 = LocalDate.of(2018, 1, 5);
-		LocalDate data2 = LocalDate.of(2018, 1, 6);
-
+	public ResponseEntity<List<Equipment>> getByString(@PathVariable String name, @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate data1, @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate data2) {
 		List<Equipment> list = equipmentService.equipmentResult(name,data1,data2);
+		if(list.isEmpty()) {
+			return new ResponseEntity<>(list,null,HttpStatus.NOT_FOUND);
+		}
+		return new ResponseEntity<>(list,null,HttpStatus.OK);
+	}
 
+	/**
+	 * Método responsável por retornar a lista de equipamento com disponibilidade atualizada quando alterar a data (para atualizar a tabela.)
+	 * @param equipList
+	 * @param data1
+	 * @param data2
+	 * @return
+	 */
+	@RequestMapping(value="/updateEquipList", method=RequestMethod.POST)
+	public ResponseEntity<List<Equipment>> getByEquipList(@RequestBody List<Equipment> equipList, @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate data1, @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate data2) {
+		List<Equipment> list = equipmentService.equipmentResultList(equipList,data1,data2);
 		if(list.isEmpty()) {
 			return new ResponseEntity<>(list,null,HttpStatus.NOT_FOUND);
 		}
@@ -125,6 +153,16 @@ public class EquipmentController {
 	 * @param pageable
 	 * @return
 	 */
+	@RequestMapping(value="/getAll", method=RequestMethod.GET)
+	public ResponseEntity<List<Equipment>> getPageEquipment(@RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate date1, @RequestParam @DateTimeFormat(iso = ISO.DATE) LocalDate date2){
+		List<Equipment> list = new ArrayList<>();
+		list = equipmentService.getAllEquipmentsPage(date1, date2);
+		if(list.isEmpty()) {
+			return new ResponseEntity<>(list,null,HttpStatus.NO_CONTENT);
+		}
+		return new ResponseEntity<>(list,null,HttpStatus.OK);
+	}
+	/*
 	@RequestMapping(value="/page", method=RequestMethod.GET)
 	public ResponseEntity<Page<Equipment>> getPageEquipment(Pageable pageable){
 		//yyyy-mm-dd (retirar depois de testar ***************)
@@ -135,7 +173,7 @@ public class EquipmentController {
 			return new ResponseEntity<>(result,null,HttpStatus.NO_CONTENT);
 		}
 		return new ResponseEntity<>(result,null,HttpStatus.OK);
-	}
+	}*/
 
 	/**
 	 * metodo responsável por devolver a disponibilidade do equipamento no mes inteiro
@@ -149,5 +187,5 @@ public class EquipmentController {
 			return new ResponseEntity<>(availabilityList,null,HttpStatus.NO_CONTENT);
 		}
 		return new ResponseEntity<>(availabilityList,null,HttpStatus.OK);
-	}	
+	}		
 }

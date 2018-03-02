@@ -6,8 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import br.com.pti.lassesce.model.Equipment;
@@ -44,11 +42,35 @@ public class EquipmentService {
 	public void delete(Equipment equipment) {
 		equipmentRepository.delete(equipment);
 	}
-
 	
-	public List<Equipment> find(){
-		return equipmentRepository.findAll();
+	public boolean searchSerial(Equipment equipment) {
+		Equipment eq = equipmentRepository.findOne(equipment.getId());
+		if(eq.getSerial().equals(equipment.getSerial())) {
+			//retorna true caso os seriais forem iguais, ou seja, nao precisa verificar se existe outro serial cadastrado.	
+			System.out.println("entrou no patrimonio igual");
+			return true;
+		}else {
+			System.out.println("entrou no patrimonio diferente");
+			return false;
+		}
 	}
+
+
+	public List<Equipment> find(){
+		return equipmentRepository.findByActiveTrue();
+	}
+
+	public boolean existSerial(Equipment equipment) {
+		Equipment eq = equipmentRepository.findBySerial(equipment.getSerial());
+		if(eq != null) {
+			//serial ja existe, entao retorna true
+			return true;
+		}else {
+			//serial nao existe, entao retorna false
+			return false;
+		}
+	}
+	
 	
 	/**
 	 * Método responsável por realizar a busca de equipamentos a partir da string do nome, funcionalidade
@@ -60,17 +82,20 @@ public class EquipmentService {
 	 */
 	public List<Equipment> equipmentResult(String equipName,LocalDate data1,LocalDate data2){
 		//busca todos os equipamentos contendo a string passada
-		List<Equipment> equipList = equipmentRepository.findByNameIgnoreCaseContaining(equipName);
+		List<Equipment> equipList = equipmentRepository.findByNameIgnoreCaseContainingAndActiveTrue(equipName);
 		//busca todas as loan no intervalo de tempo
 		List<LoanOrder> loanList = loanOrderRepository.findByDateBetween(data1, data2);
+		
+		for(LoanOrder l : loanList) {
+			System.out.println("idloan: " + l.getId());
+		}
+		
 		//lista de equipamentos utilizados nas loans no intervalo de tempo
 		List<Equipment> usedEquipmentList = new ArrayList<>();
 		//pega todos os equipamentos de todas as ordens de emprestimo no intervalo de tempo
 		for(LoanOrder l : loanList) {
-			System.out.println("loan id: " + l.getId());
 			List<Equipment> equipmentLoanList = l.getEquipments();
 			for(Equipment e : equipmentLoanList) {
-				System.out.println("adicionado na usedEquip: " + e.getName());
 				usedEquipmentList.add(e);
 			}
 		}
@@ -84,9 +109,9 @@ public class EquipmentService {
 		return equipList;
 	}
 
-	public Page<Equipment> getAllEquipmentsPage(Pageable pageable, LocalDate date1, LocalDate date2) {
+	public List<Equipment> getAllEquipmentsPage(LocalDate date1, LocalDate date2) {
 
-		Page<Equipment> equipmentListPage = equipmentRepository.findAll(pageable);
+		List<Equipment> allEquipmentList = equipmentRepository.findByActiveTrue();
 		//busca todas as loan no intervalo de tempo
 		List<LoanOrder> loanList = loanOrderRepository.findByDateBetween(date1, date2);
 		//lista de equipamentos utilizados nas ordens de emprestimo
@@ -101,13 +126,13 @@ public class EquipmentService {
 			}
 		}
 		for(Equipment e : usedEquipmentList) {
-			for(Equipment eq : equipmentListPage) {
+			for(Equipment eq : allEquipmentList) {
 				if(e.getId() == eq.getId()) {	
 					eq.setUnavailable(true);
 				}
 			}
 		}
-		return equipmentListPage;
+		return allEquipmentList;
 	}
 
 	public List<LocalDate> checkAvailability(LocalDate date, long EquipmentId) { 
@@ -127,21 +152,55 @@ public class EquipmentService {
 			for(Equipment e : equipList) {
 				//entra se o equipamento recebido esta contido na lista de equipamento da ordem em questao
 				if(e.getId() == EquipmentId) {
-					LocalDate fallBack = l.getPullout();
+					LocalDate pullout = l.getPullout();
 					LocalDate refound = l.getRefound();
 					//pega a diferença de dias entre a retirada e devolução				
-					long daysBetween = ChronoUnit.DAYS.between(fallBack, refound);	
+					long daysBetween = ChronoUnit.DAYS.between(pullout, refound);	
 					//adiciona o primeiro dia a lista (data de retirada)
-					monthAvailability.add(fallBack);
+					monthAvailability.add(pullout);
 					int i = 0;
 					while(i < daysBetween) {
-						fallBack = fallBack.plusDays(1);
-						monthAvailability.add(fallBack);
+						pullout = pullout.plusDays(1);
+						monthAvailability.add(pullout);
 						i++;
 					}
 				}
 			}
 		}
 		return monthAvailability;
+	}
+
+	public List<Equipment> equipmentResultList(List<Equipment> equipList, LocalDate pulloutDate, LocalDate refoundDate) {
+		
+		for(Equipment e : equipList) {
+			e.setUnavailable(false);
+		}
+		
+		//busca todas as loan no intervalo de tempo
+		List<LoanOrder> loanList = loanOrderRepository.findByDateBetween(pulloutDate, refoundDate);
+		//lista de equipamento utilizado nas loans no intervalo
+		List<Equipment> usedEquipmentList = new ArrayList<>();
+		//pega todos os equipamentos de todas as ordens de emprestimo no intervalo de tempo
+		for(LoanOrder l : loanList) {
+			List<Equipment> equipmentLoanList = l.getEquipments();
+			for(Equipment e : equipmentLoanList) {
+				usedEquipmentList.add(e);
+			}
+		}
+
+		if(!usedEquipmentList.isEmpty()) {
+			for(Equipment e : usedEquipmentList) {
+				for(Equipment eq : equipList) {
+					if(e.getId() == eq.getId()) {
+						eq.setUnavailable(true);
+					}
+				}
+			}
+		}else {
+			for(Equipment e : equipList) {
+				e.setUnavailable(false);
+			}
+		}
+		return equipList;
 	}
 }
